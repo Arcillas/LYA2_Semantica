@@ -4,32 +4,25 @@ using System.Linq;
 using System.Threading.Tasks;
 
 /*
-	[ ]	Requerimento 1: Meter al stack el valor de la variable
-	[ ]	Requeriminto 2: Modificar el Valor de la variable, y no pasar por alto el ++ y el --
-	[ ]	Requeriminto 3: Printf: Implementar secuencias de escape, quitar comillas
-	[ ]	Requeriminto 4: Scanf: Modificar el valor de la variable, y levantar una excepcion si
-						lo capturado no es un numero
-	[ ]	Requeriminto 5: Implementar el casteo
-
-	Tipo: usando un replace de '\n' a un '\\n'
-
+    [*] : Requerimiento 1: Printf -> printf(cadena(, Identificador)?); 
+    [*] : Requerimiento 2: Scanf -> scanf(cadena,&Identificador);
+    [*] : Requerimiento 3: Agregar a la Asignacion +=, -=, *=. /=, %=
+                          Ejemplo:
+                          Identificador IncrementoTermino Expresion;
+                          Identificador IncrementoFactor Expresion;
+    [] : Requerimiento 4: Agregar el else optativo al if
+    [*] : Requerimiento 5: Indicar el número de linea de los errores
 */
 
-namespace LYA2_Semantica
+namespace LYA1_Sintaxis1
 {
     public class Lenguaje : Sintaxis
     {
-        List<Variable>	variables;
-		Stack<float> s;
         public Lenguaje()
         {
-            variables = new List<Variable>();
-			s = new Stack<float>();
         }
         public Lenguaje(string nombre) : base(nombre)
         {
-			s = new Stack<float>();
-            variables = new List<Variable>();
         }
         //Programa  -> Librerias? Variables? Main
         public void Programa()
@@ -43,60 +36,6 @@ namespace LYA2_Semantica
                 Variables();
             }
             Main();
-            imprimirVariables();
-			// imprimeStack();
-        }
-		private void imprimirVariables(){
-			log.WriteLine("Variables");
-			log.WriteLine("====================");
-			foreach (Variable v in variables)
-			{
-			    	log.WriteLine(v.getNombre() + " = "+ v.getValor());
-			}
-		}
-
-		private void imprimeStack(){
-			Console.WriteLine("\nStack:\n\t+---------------+\t");
-			foreach (float valor in s)
-			{
-			    	Console.WriteLine("\t|\t" + valor + "\t|\t");
-			}
-			Console.WriteLine("\t+---------------+\t");
-
-		}
-
-		private float valorVariable(string nombre){
-            foreach (Variable v in variables)
-            {
-                if (v.getNombre() == nombre)
-                {
-                    return v.getValor();
-                }
-            }
-            return 0;
-        }
-		
-		private float modificarValor(String nombre, float NewValor){
-			foreach (Variable v in variables)
-			{
-				if (v.getNombre() == nombre)
-				{
-					v.setValor(NewValor);
-					return NewValor;
-				}
-			}
-			return 0;
-		}
-
-		private bool existeVariable(string nombre){
-            foreach (Variable v in variables)
-            {
-                if (v.getNombre() == nombre)
-                {
-                    return true;
-                }
-            }
-            return false;
         }
         //Librerias -> #include<identificador(.h)?> Librerias?
         private void Librerias()
@@ -119,19 +58,8 @@ namespace LYA2_Semantica
         //Variables -> tipoDato listaIdentificadores; Variables?
         private void Variables()
         {
-            Variable.TipoDato tipo = Variable.TipoDato.Char;
-            switch(getContenido())
-            {
-                case "int":
-                    tipo = Variable.TipoDato.Int;
-                    break;
-                case "float":
-                    tipo = Variable.TipoDato.Float;
-                    break;
-            }
             match(Tipos.tipoDatos);
-            listaIdentificadores(tipo);
-
+            listaIdentificadores();
             match(";");
             if (getClasificacion() == Tipos.tipoDatos)
             {
@@ -139,22 +67,13 @@ namespace LYA2_Semantica
             }
         }
         //listaIdentificadores -> Identificador (,listaIdentificadores)?
-        private void listaIdentificadores(Variable.TipoDato tipo)
+        private void listaIdentificadores()
         {
-            string nombre = getContenido();
             match(Tipos.Identificador);
-            if(!existeVariable(nombre))
-            {
-                variables.Add(new Variable(nombre,tipo));
-            }
-            else
-            {
-                throw new Error("de Sintaxis : la variable " + nombre + " ya existe",log);
-            }
             if (getContenido() == ",")
             {
                 match(",");
-                listaIdentificadores(tipo);
+                listaIdentificadores();
             }
         }
         //bloqueInstrucciones -> { listaIntrucciones? }
@@ -213,13 +132,11 @@ namespace LYA2_Semantica
         {
             match("printf");
             match("(");
-			Console.Write(getContenido());
             match(Tipos.Cadena);
-            if (getContenido() == ",")
+            while (getContenido() == ",")
             {
                 match(",");
-                Console.Write(valorVariable(getContenido()));
-				match(Tipos.Identificador);
+                match(Tipos.Identificador);
             }
             match(")");
             match(";");
@@ -233,10 +150,7 @@ namespace LYA2_Semantica
             match(Tipos.Cadena);
             match(",");
             match("&");
-			string name = getContenido();
             match(Tipos.Identificador);
-			string var = Console.ReadLine();
-			modificarValor(name, float.Parse(var));
             match(")");
             match(";");
         }
@@ -253,8 +167,7 @@ namespace LYA2_Semantica
             {
                 match(Tipos.OperadorFactor);
             }
-            else if (getClasificacion() == Tipos.Incremento)
-            {
+            else if (getClasificacion() == Tipos.Incremento){
                 match(Tipos.Incremento);
             }
             else if (getClasificacion() == Tipos.Decremento)
@@ -278,7 +191,6 @@ namespace LYA2_Semantica
                 match("=");
                 Expresion();
             }
-			Console.WriteLine(s.Pop());
             match(";");
         }
         //If -> if (Condicion) instruccion | bloqueInstrucciones 
@@ -297,7 +209,7 @@ namespace LYA2_Semantica
             {
                 Instruccion();
             }
-            if (getContenido() == "else")
+            if(getContenido() == "else")
             {
                 match("else");
                 if (getContenido() == "{")
@@ -350,7 +262,7 @@ namespace LYA2_Semantica
             Condicion();
             match(")");
             match(";");
-
+            
         }
         //For -> for(Asignacion Condicion; Incremento) BloqueInstruccones | Instruccion 
         private void For()
@@ -396,7 +308,7 @@ namespace LYA2_Semantica
         }
         //Expresion -> Termino MasTermino
         private void Expresion()
-        {
+        {   
             Termino();
             MasTermino();
         }
@@ -405,17 +317,8 @@ namespace LYA2_Semantica
         {
             if (getClasificacion() == Tipos.OperadorTermino)
             {
-				string op = getContenido();
                 match(Tipos.OperadorTermino);
                 Termino();
-				float N1 = s.Pop();
-				float N2 = s.Pop();
-				switch (op){
-					case "+": s.Push(N2+N1); break;
-					case "-": s.Push(N2-N1); break;
-				}
-
-				// Console.Write(" " + op);
             }
         }
         //Termino -> Factor PorFactor
@@ -430,19 +333,8 @@ namespace LYA2_Semantica
         {
             if (getClasificacion() == Tipos.OperadorFactor)
             {
-				string op = getContenido();
                 match(Tipos.OperadorFactor);
                 Factor();
-				
-				float N1 = s.Pop();
-				float N2 = s.Pop();
-				switch (op){
-					case "*": s.Push(N2*N1); break;
-					case "/": s.Push(N2/N1); break;
-					case "%": s.Push(N2%N1); break;
-				}
-				
-				// Console.Write(" " + op);
             }
         }
         //Factor -> numero | identificador | (Expresion)
@@ -450,15 +342,10 @@ namespace LYA2_Semantica
         {
             if (getClasificacion() == Tipos.Numero)
             {
-				// Console.Write(" " + getContenido());
-				s.Push(float.Parse(getContenido()));
                 match(Tipos.Numero);
             }
             else if (getClasificacion() == Tipos.Identificador)
             {
-				// Valor de la variable s.Push(); // 
-				s.Push(valorVariable(getContenido()));
-				// Console.Write(" " + getContenido());
                 match(Tipos.Identificador);
             }
             else
