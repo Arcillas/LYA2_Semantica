@@ -44,7 +44,7 @@ namespace LYA2_Semantica
             }
             Main();
             imprimirVariables();
-			// imprimeStack();
+            // imprimeStack();
         }
         //Librerias -> #include<identificador(.h)?> Librerias?
         private void Librerias()
@@ -71,7 +71,14 @@ namespace LYA2_Semantica
             log.WriteLine("====================");
             foreach (Variable v in variables)
             {
-                log.WriteLine(v.getNombre() + " = " + v.getValor());
+               if (v.getTipo() == Variable.TipoDato.Char)
+				{
+					log.WriteLine(v.getNombre() + " = " + v.getString());
+				}
+				else
+				{
+					log.WriteLine(v.getNombre() + " = " + v.getValor());
+				} 
             }
         }
 
@@ -98,6 +105,17 @@ namespace LYA2_Semantica
             }
             return 0;
         }
+		private string valorString(string nombre)
+        {
+            foreach (Variable v in variables)
+            {
+                if (v.getNombre() == nombre)
+                {
+                    return v.getString();
+                }
+            }
+            return "";
+        }
 
         private float modificarValor(String nombre, float NewValor)
         {
@@ -110,6 +128,18 @@ namespace LYA2_Semantica
                 }
             }
             return 0;
+        }
+        private string modificarString(String nombre, string NewValor)
+        {
+            foreach (Variable v in variables)
+            {
+                if (v.getNombre() == nombre)
+                {
+                    v.setString(NewValor);
+                    return NewValor;
+                }
+            }
+            return "";
         }
 
         private bool existeVariable(string nombre)
@@ -242,7 +272,14 @@ namespace LYA2_Semantica
             if (getContenido() == ",")
             {
                 match(",");
-                str = str.Replace("%f", valorVariable(getContenido()).ToString());
+                
+				if (str.Contains("%f"))
+				{
+					str = str.Replace("%f", valorVariable(getContenido()).ToString());
+				}
+				else if (str.Contains("%s")){
+					str = str.Replace("%s", valorString(getContenido()));
+				}
 
                 match(Tipos.Identificador);
             }
@@ -274,88 +311,117 @@ namespace LYA2_Semantica
         //Asignacion -> Identificador (++ | --) | (= Expresion);
         private void Asignacion()
         {
-			string Var_1;
-			float var1_value = 0;
-			float var2_value = 0;
-			string Var_2;
-			float new_val;
+            string Var_1;
+            float var1_value = 0;
+            float var2_value = 0;
+            string Var_2;
+            float new_val;
+            Variable? getType = null;
 
             Var_1 = getContenido();
-			if (existeVariable(Var_1)){
-				match(Tipos.Identificador);
-				if (getClasificacion() == Tipos.Incremento)
-				{
 
-					var1_value = valorVariable(Var_1);
-					match(Tipos.Incremento);
-					new_val = var1_value + 1;
-					modificarValor(Var_1, new_val);
+            getType = variables.Find(x => x.getNombre() == Var_1);
 
-				}
-				else if (getClasificacion() == Tipos.Decremento)
-				{
-					var1_value = valorVariable(Var_1);
-					match(Tipos.Decremento);
-					new_val = var1_value - 1;
-					modificarValor(Var_1, new_val);
-				}
 
-				else if (getClasificacion() == Tipos.IncrementoTermino)
-				{
-					var1_value = valorVariable(Var_1);
-					match(Tipos.IncrementoTermino);
-					if (getClasificacion() == Tipos.Identificador) {
-						Var_2 = getContenido();
-						match(Tipos.Identificador);
-						var2_value = valorVariable(Var_2);
-						new_val = var1_value + var2_value;
-					}
-					else if (getClasificacion() == Tipos.Numero) {
-						var2_value = float.Parse(getContenido());
-						match(Tipos.Numero);
-						new_val = var1_value + var2_value;
-					}
-					else {
-						Expresion();
-						new_val = s.Pop();
-					}
+            if (getType != null)
+            {
+                if (getType.getTipo() == Variable.TipoDato.Char)
+                {
 
-					modificarValor(Var_1, new_val);        }
-			   
-				else if (getClasificacion() == Tipos.IncrementoFactor)
-				{
-					var1_value = valorVariable(Var_1);
-					match(Tipos.IncrementoFactor);
-					if (getClasificacion() == Tipos.Identificador) {
-						Var_2 = getContenido();
-						match(Tipos.Identificador);
-						var2_value = valorVariable(Var_2);
-						new_val = var1_value * var2_value;
-					}
-					else if (getClasificacion() == Tipos.Numero) {
-						var2_value = float.Parse(getContenido());
-						match(Tipos.Numero);
-						new_val = var1_value * var2_value;
-					}
-					else {
-						Expresion();
-						new_val = s.Pop();
-					}
+                    match(Tipos.Identificador);
+                    string str;
+                    match("=");
+                    str = getContenido();
+					str = str.Replace("\"", "");
+                    match(Tipos.Cadena);
+                    modificarString(Var_1, str);
+                }
+                else if (getType.getTipo() == Variable.TipoDato.Int || getType.getTipo() == Variable.TipoDato.Float)
+                {
+                    match(Tipos.Identificador);
+                    if (getClasificacion() == Tipos.Incremento)
+                    {
 
-					modificarValor(Var_1, new_val);
-				}
-				else
-				{
-					var1_value = valorVariable(Var_1);
-					match("=");
-					Expresion();
-					new_val = s.Pop();
-					modificarValor(Var_1, new_val);
-				}
-			}
-			else{
-				throw new Error("de Sintaxis: la variable " + Var_1 + " no existe ", log);
-			}
+                        var1_value = valorVariable(Var_1);
+                        match(Tipos.Incremento);
+                        new_val = var1_value + 1;
+                        modificarValor(Var_1, new_val);
+
+                    }
+                    else if (getClasificacion() == Tipos.Decremento)
+                    {
+                        var1_value = valorVariable(Var_1);
+                        match(Tipos.Decremento);
+                        new_val = var1_value - 1;
+                        modificarValor(Var_1, new_val);
+                    }
+
+                    else if (getClasificacion() == Tipos.IncrementoTermino)
+                    {
+                        var1_value = valorVariable(Var_1);
+                        match(Tipos.IncrementoTermino);
+                        if (getClasificacion() == Tipos.Identificador)
+                        {
+                            Var_2 = getContenido();
+                            match(Tipos.Identificador);
+                            var2_value = valorVariable(Var_2);
+                            new_val = var1_value + var2_value;
+                        }
+                        else if (getClasificacion() == Tipos.Numero)
+                        {
+                            var2_value = float.Parse(getContenido());
+                            match(Tipos.Numero);
+                            new_val = var1_value + var2_value;
+                        }
+                        else
+                        {
+                            Expresion();
+                            new_val = s.Pop();
+                        }
+
+                        modificarValor(Var_1, new_val);
+                    }
+
+                    else if (getClasificacion() == Tipos.IncrementoFactor)
+                    {
+                        var1_value = valorVariable(Var_1);
+                        match(Tipos.IncrementoFactor);
+                        if (getClasificacion() == Tipos.Identificador)
+                        {
+                            Var_2 = getContenido();
+                            match(Tipos.Identificador);
+                            var2_value = valorVariable(Var_2);
+                            new_val = var1_value * var2_value;
+                        }
+                        else if (getClasificacion() == Tipos.Numero)
+                        {
+                            var2_value = float.Parse(getContenido());
+                            match(Tipos.Numero);
+                            new_val = var1_value * var2_value;
+                        }
+                        else
+                        {
+                            Expresion();
+                            new_val = s.Pop();
+                        }
+
+                        modificarValor(Var_1, new_val);
+                    }
+                    else
+                    {
+                        var1_value = valorVariable(Var_1);
+                        match("=");
+                        Expresion();
+                        new_val = s.Pop();
+                        modificarValor(Var_1, new_val);
+                    }
+                }
+            }
+
+            else
+            {
+                throw new Error("de Sintaxis: la variable " + Var_1 + " no existe ", log);
+            }
 
 
 
