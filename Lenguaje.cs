@@ -44,7 +44,7 @@ namespace LYA2_Semantica
             }
             Main();
             imprimirVariables();
-			imprimeStack();
+			// imprimeStack();
         }
         //Librerias -> #include<identificador(.h)?> Librerias?
         private void Librerias()
@@ -274,18 +274,59 @@ namespace LYA2_Semantica
         //Asignacion -> Identificador (++ | --) | (= Expresion);
         private void Asignacion()
         {
+			string Var_1;
+			float var1_value = 0;
+			float var2_value = 0;
+			string Var_2;
+			float new_val;
+
+            Var_1 = getContenido();
             match(Tipos.Identificador);
-            if (getClasificacion() == Tipos.OperadorTermino)
-            {
-                match(Tipos.OperadorTermino);
+			if (getContenido() == "*=")
+            {	
+				var1_value = valorVariable(Var_1);
+                match(Tipos.IncrementoFactor);
+				if (getClasificacion() == Tipos.Numero) {
+					match(Tipos.Numero);
+					var2_value = float.Parse(getContenido());
+				}
+				else if (getClasificacion() == Tipos.Identificador) {
+					Var_2 = getContenido();
+					match(Tipos.Identificador);
+					var2_value = valorVariable(Var_2);
+				}
+
+				new_val = var1_value * var2_value;	
+				modificarValor(Var_1, new_val);
+
             }
+			else if (getContenido() == "/="){
+				var1_value = valorVariable(Var_1);
+                match(Tipos.IncrementoFactor);
+				if (getClasificacion() == Tipos.Numero) {
+					var2_value = float.Parse(getContenido());
+				}
+				else if (getClasificacion() == Tipos.Identificador) {
+					Var_2 = getContenido();
+					var2_value = valorVariable(Var_2);
+				}
+
+				new_val = var1_value / var2_value;	
+				modificarValor(Var_1, new_val);
+			}
             else if (getClasificacion() == Tipos.OperadorFactor)
             {
                 match(Tipos.OperadorFactor);
+
             }
             else if (getClasificacion() == Tipos.Incremento)
             {
+
+				var1_value = valorVariable(Var_1);
                 match(Tipos.Incremento);
+				new_val = var1_value + 1;
+				modificarValor(Var_1, new_val);
+
             }
             else if (getClasificacion() == Tipos.Decremento)
             {
@@ -305,8 +346,11 @@ namespace LYA2_Semantica
 
             else
             {
+				var1_value = valorVariable(Var_1);
                 match("=");
                 Expresion();
+				new_val = s.Pop();
+				modificarValor(Var_1, new_val);
             }
             match(";");
         }
@@ -406,6 +450,7 @@ namespace LYA2_Semantica
             match(Tipos.Identificador);
             if (getClasificacion() == Tipos.Incremento)
             {
+
                 match(Tipos.Incremento);
             }
             else
