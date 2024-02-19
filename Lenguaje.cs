@@ -4,12 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 
 /*
-	[ ]	Requerimento 1: Meter al stack el valor de la variable
-	[ ]	Requeriminto 2: Modificar el Valor de la variable, y no pasar por alto el ++ y el --
+	[*]	Requerimento 1: Meter al stack el valor de la variable
+	[*]	Requeriminto 2: Modificar el Valor de la variable, y no pasar por alto el ++ y el --
 	[*]	Requeriminto 3: Printf: Implementar secuencias de escape, quitar comillas
 	[*]	Requeriminto 4: Scanf: Modificar el valor de la variable, y levantar una excepcion si
 						lo capturado no es un numero
-	[ ]	Requeriminto 5: Implementar el casteo
+	[ ]	Requeriminto 5: Implementar el casteo (La neta no se como implementarlo)
 
 	Tipo: usando un replace de '\n' a un '\\n'
 
@@ -71,14 +71,16 @@ namespace LYA2_Semantica
             log.WriteLine("====================");
             foreach (Variable v in variables)
             {
-               if (v.getTipo() == Variable.TipoDato.Char)
-				{
-					log.WriteLine(v.getNombre() + " = " + v.getString());
-				}
-				else
-				{
-					log.WriteLine(v.getNombre() + " = " + v.getValor());
-				} 
+                if (v.getTipo() == Variable.TipoDato.Char)
+                {
+                    log.WriteLine(v.getNombre() + " = " + v.getString());
+                }
+                else
+                {
+                    log.WriteLine(v.getNombre() + " = " + v.getValor());
+                    s.Push(v.getValor());
+
+                }
             }
         }
 
@@ -105,7 +107,7 @@ namespace LYA2_Semantica
             }
             return 0;
         }
-		private string valorString(string nombre)
+        private string valorString(string nombre)
         {
             foreach (Variable v in variables)
             {
@@ -272,14 +274,15 @@ namespace LYA2_Semantica
             if (getContenido() == ",")
             {
                 match(",");
-                
-				if (str.Contains("%f"))
-				{
-					str = str.Replace("%f", valorVariable(getContenido()).ToString());
-				}
-				else if (str.Contains("%s")){
-					str = str.Replace("%s", valorString(getContenido()));
-				}
+
+                if (str.Contains("%f"))
+                {
+                    str = str.Replace("%f", valorVariable(getContenido()).ToString());
+                }
+                else if (str.Contains("%s"))
+                {
+                    str = str.Replace("%s", valorString(getContenido()));
+                }
 
                 match(Tipos.Identificador);
             }
@@ -332,7 +335,7 @@ namespace LYA2_Semantica
                     string str;
                     match("=");
                     str = getContenido();
-					str = str.Replace("\"", "");
+                    str = str.Replace("\"", "");
                     match(Tipos.Cadena);
                     modificarString(Var_1, str);
                 }
@@ -415,6 +418,9 @@ namespace LYA2_Semantica
                         new_val = s.Pop();
                         modificarValor(Var_1, new_val);
                     }
+                    // Console.WriteLine("Nuevo valor de " + Var_1 + " = " + new_val);
+
+
                 }
             }
 
@@ -598,12 +604,15 @@ namespace LYA2_Semantica
         {
             if (getClasificacion() == Tipos.Numero)
             {
+                // Console.Write(" " + getContenido());
                 s.Push(float.Parse(getContenido()));
                 match(Tipos.Numero);
             }
             else if (getClasificacion() == Tipos.Identificador)
             {
+                // Valor de la variable s.Push(); // 
                 s.Push(valorVariable(getContenido()));
+                // Console.Write(" " + getContenido());
                 match(Tipos.Identificador);
             }
             else
@@ -611,7 +620,7 @@ namespace LYA2_Semantica
                 match("(");
                 if (getClasificacion() == Tipos.tipoDatos)
                 {
-                    float val = 0;
+                    float val = s.Pop();
                     string tipo = getContenido();
                     match(Tipos.tipoDatos);
                     match(")");

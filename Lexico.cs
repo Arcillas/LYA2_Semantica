@@ -206,7 +206,11 @@ namespace LYA2_Semantica
                     switch (getContenido())
                     {
                         case "char":
+                            setClasificacion(Tipos.tipoDatos);
+                            break;
                         case "int":
+                            setClasificacion(Tipos.tipoDatos);
+                            break;
                         case "float": 
                             setClasificacion(Tipos.tipoDatos);
                             break;
