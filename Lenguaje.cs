@@ -282,44 +282,7 @@ namespace LYA2_Semantica
 
             Var_1 = getContenido();
             match(Tipos.Identificador);
-			if (getContenido() == "*=")
-            {	
-				var1_value = valorVariable(Var_1);
-                match(Tipos.IncrementoFactor);
-				if (getClasificacion() == Tipos.Numero) {
-					match(Tipos.Numero);
-					var2_value = float.Parse(getContenido());
-				}
-				else if (getClasificacion() == Tipos.Identificador) {
-					Var_2 = getContenido();
-					match(Tipos.Identificador);
-					var2_value = valorVariable(Var_2);
-				}
-
-				new_val = var1_value * var2_value;	
-				modificarValor(Var_1, new_val);
-
-            }
-			else if (getContenido() == "/="){
-				var1_value = valorVariable(Var_1);
-                match(Tipos.IncrementoFactor);
-				if (getClasificacion() == Tipos.Numero) {
-					var2_value = float.Parse(getContenido());
-				}
-				else if (getClasificacion() == Tipos.Identificador) {
-					Var_2 = getContenido();
-					var2_value = valorVariable(Var_2);
-				}
-
-				new_val = var1_value / var2_value;	
-				modificarValor(Var_1, new_val);
-			}
-            else if (getClasificacion() == Tipos.OperadorFactor)
-            {
-                match(Tipos.OperadorFactor);
-
-            }
-            else if (getClasificacion() == Tipos.Incremento)
+            if (getClasificacion() == Tipos.Incremento)
             {
 
 				var1_value = valorVariable(Var_1);
@@ -330,20 +293,56 @@ namespace LYA2_Semantica
             }
             else if (getClasificacion() == Tipos.Decremento)
             {
+				var1_value = valorVariable(Var_1);
                 match(Tipos.Decremento);
+				new_val = var1_value - 1;
+				modificarValor(Var_1, new_val);
             }
 
             else if (getClasificacion() == Tipos.IncrementoTermino)
             {
+    			var1_value = valorVariable(Var_1);
                 match(Tipos.IncrementoTermino);
-                Expresion();
-            }
-            else if (getClasificacion() == Tipos.IncrementoFactor)
-            {
-                match(Tipos.IncrementoFactor);
-                Expresion();
-            }
+				if (getClasificacion() == Tipos.Identificador) {
+					Var_2 = getContenido();
+					match(Tipos.Identificador);
+					var2_value = valorVariable(Var_2);
+					new_val = var1_value + var2_value;
+				}
+				else if (getClasificacion() == Tipos.Numero) {
+					var2_value = float.Parse(getContenido());
+					match(Tipos.Numero);
+					new_val = var1_value + var2_value;
+				}
+				else {
+					Expresion();
+					new_val = s.Pop();
+				}
 
+				modificarValor(Var_1, new_val);        }
+           
+			else if (getClasificacion() == Tipos.IncrementoFactor)
+            {
+    			var1_value = valorVariable(Var_1);
+                match(Tipos.IncrementoFactor);
+				if (getClasificacion() == Tipos.Identificador) {
+					Var_2 = getContenido();
+					match(Tipos.Identificador);
+					var2_value = valorVariable(Var_2);
+					new_val = var1_value * var2_value;
+				}
+				else if (getClasificacion() == Tipos.Numero) {
+					var2_value = float.Parse(getContenido());
+					match(Tipos.Numero);
+					new_val = var1_value * var2_value;
+				}
+				else {
+					Expresion();
+					new_val = s.Pop();
+				}
+
+				modificarValor(Var_1, new_val);
+			}
             else
             {
 				var1_value = valorVariable(Var_1);
