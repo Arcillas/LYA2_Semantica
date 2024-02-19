@@ -281,76 +281,84 @@ namespace LYA2_Semantica
 			float new_val;
 
             Var_1 = getContenido();
-            match(Tipos.Identificador);
-            if (getClasificacion() == Tipos.Incremento)
-            {
+			if (existeVariable(Var_1)){
+				match(Tipos.Identificador);
+				if (getClasificacion() == Tipos.Incremento)
+				{
 
-				var1_value = valorVariable(Var_1);
-                match(Tipos.Incremento);
-				new_val = var1_value + 1;
-				modificarValor(Var_1, new_val);
+					var1_value = valorVariable(Var_1);
+					match(Tipos.Incremento);
+					new_val = var1_value + 1;
+					modificarValor(Var_1, new_val);
 
-            }
-            else if (getClasificacion() == Tipos.Decremento)
-            {
-				var1_value = valorVariable(Var_1);
-                match(Tipos.Decremento);
-				new_val = var1_value - 1;
-				modificarValor(Var_1, new_val);
-            }
-
-            else if (getClasificacion() == Tipos.IncrementoTermino)
-            {
-    			var1_value = valorVariable(Var_1);
-                match(Tipos.IncrementoTermino);
-				if (getClasificacion() == Tipos.Identificador) {
-					Var_2 = getContenido();
-					match(Tipos.Identificador);
-					var2_value = valorVariable(Var_2);
-					new_val = var1_value + var2_value;
 				}
-				else if (getClasificacion() == Tipos.Numero) {
-					var2_value = float.Parse(getContenido());
-					match(Tipos.Numero);
-					new_val = var1_value + var2_value;
+				else if (getClasificacion() == Tipos.Decremento)
+				{
+					var1_value = valorVariable(Var_1);
+					match(Tipos.Decremento);
+					new_val = var1_value - 1;
+					modificarValor(Var_1, new_val);
 				}
-				else {
+
+				else if (getClasificacion() == Tipos.IncrementoTermino)
+				{
+					var1_value = valorVariable(Var_1);
+					match(Tipos.IncrementoTermino);
+					if (getClasificacion() == Tipos.Identificador) {
+						Var_2 = getContenido();
+						match(Tipos.Identificador);
+						var2_value = valorVariable(Var_2);
+						new_val = var1_value + var2_value;
+					}
+					else if (getClasificacion() == Tipos.Numero) {
+						var2_value = float.Parse(getContenido());
+						match(Tipos.Numero);
+						new_val = var1_value + var2_value;
+					}
+					else {
+						Expresion();
+						new_val = s.Pop();
+					}
+
+					modificarValor(Var_1, new_val);        }
+			   
+				else if (getClasificacion() == Tipos.IncrementoFactor)
+				{
+					var1_value = valorVariable(Var_1);
+					match(Tipos.IncrementoFactor);
+					if (getClasificacion() == Tipos.Identificador) {
+						Var_2 = getContenido();
+						match(Tipos.Identificador);
+						var2_value = valorVariable(Var_2);
+						new_val = var1_value * var2_value;
+					}
+					else if (getClasificacion() == Tipos.Numero) {
+						var2_value = float.Parse(getContenido());
+						match(Tipos.Numero);
+						new_val = var1_value * var2_value;
+					}
+					else {
+						Expresion();
+						new_val = s.Pop();
+					}
+
+					modificarValor(Var_1, new_val);
+				}
+				else
+				{
+					var1_value = valorVariable(Var_1);
+					match("=");
 					Expresion();
 					new_val = s.Pop();
+					modificarValor(Var_1, new_val);
 				}
-
-				modificarValor(Var_1, new_val);        }
-           
-			else if (getClasificacion() == Tipos.IncrementoFactor)
-            {
-    			var1_value = valorVariable(Var_1);
-                match(Tipos.IncrementoFactor);
-				if (getClasificacion() == Tipos.Identificador) {
-					Var_2 = getContenido();
-					match(Tipos.Identificador);
-					var2_value = valorVariable(Var_2);
-					new_val = var1_value * var2_value;
-				}
-				else if (getClasificacion() == Tipos.Numero) {
-					var2_value = float.Parse(getContenido());
-					match(Tipos.Numero);
-					new_val = var1_value * var2_value;
-				}
-				else {
-					Expresion();
-					new_val = s.Pop();
-				}
-
-				modificarValor(Var_1, new_val);
 			}
-            else
-            {
-				var1_value = valorVariable(Var_1);
-                match("=");
-                Expresion();
-				new_val = s.Pop();
-				modificarValor(Var_1, new_val);
-            }
+			else{
+				throw new Error("de Sintaxis: la variable " + Var_1 + " no existe ", log);
+			}
+
+
+
             match(";");
         }
         //If -> if (Condicion) instruccion | bloqueInstrucciones 
