@@ -4,25 +4,32 @@ using System.Linq;
 using System.Threading.Tasks;
 
 /*
-    [*] : Requerimiento 1: Printf -> printf(cadena(, Identificador)?); 
-    [*] : Requerimiento 2: Scanf -> scanf(cadena,&Identificador);
-    [*] : Requerimiento 3: Agregar a la Asignacion +=, -=, *=. /=, %=
-                          Ejemplo:
-                          Identificador IncrementoTermino Expresion;
-                          Identificador IncrementoFactor Expresion;
-    [] : Requerimiento 4: Agregar el else optativo al if
-    [*] : Requerimiento 5: Indicar el número de linea de los errores
+	[ ]	Requerimento 1: Meter al stack el valor de la variable
+	[ ]	Requeriminto 2: Modificar el Valor de la variable, y no pasar por alto el ++ y el --
+	[*]	Requeriminto 3: Printf: Implementar secuencias de escape, quitar comillas
+	[*]	Requeriminto 4: Scanf: Modificar el valor de la variable, y levantar una excepcion si
+						lo capturado no es un numero
+	[ ]	Requeriminto 5: Implementar el casteo
+
+	Tipo: usando un replace de '\n' a un '\\n'
+
 */
 
-namespace LYA1_Sintaxis1
+namespace LYA2_Semantica
 {
     public class Lenguaje : Sintaxis
     {
+        List<Variable> variables;
+        Stack<float> s;
         public Lenguaje()
         {
+            variables = new List<Variable>();
+            s = new Stack<float>();
         }
         public Lenguaje(string nombre) : base(nombre)
         {
+            variables = new List<Variable>();
+            s = new Stack<float>();
         }
         //Programa  -> Librerias? Variables? Main
         public void Programa()
@@ -36,6 +43,8 @@ namespace LYA1_Sintaxis1
                 Variables();
             }
             Main();
+            imprimirVariables();
+			imprimeStack();
         }
         //Librerias -> #include<identificador(.h)?> Librerias?
         private void Librerias()
@@ -55,11 +64,84 @@ namespace LYA1_Sintaxis1
                 Librerias();
             }
         }
+
+        private void imprimirVariables()
+        {
+            log.WriteLine("Variables");
+            log.WriteLine("====================");
+            foreach (Variable v in variables)
+            {
+                log.WriteLine(v.getNombre() + " = " + v.getValor());
+            }
+        }
+
+        private void imprimeStack()
+        {
+            Console.WriteLine("\nStack:\n\t+---------------+\t");
+            foreach (float valor in s)
+            {
+                Console.WriteLine("\t|\t" + valor + "\t|\t");
+            }
+            Console.WriteLine("\t+---------------+\t");
+
+        }
+
+
+        private float valorVariable(string nombre)
+        {
+            foreach (Variable v in variables)
+            {
+                if (v.getNombre() == nombre)
+                {
+                    return v.getValor();
+                }
+            }
+            return 0;
+        }
+
+        private float modificarValor(String nombre, float NewValor)
+        {
+            foreach (Variable v in variables)
+            {
+                if (v.getNombre() == nombre)
+                {
+                    v.setValor(NewValor);
+                    return NewValor;
+                }
+            }
+            return 0;
+        }
+
+        private bool existeVariable(string nombre)
+        {
+            foreach (Variable v in variables)
+            {
+                if (v.getNombre() == nombre)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         //Variables -> tipoDato listaIdentificadores; Variables?
         private void Variables()
         {
+            Variable.TipoDato tipoDato = Variable.TipoDato.Char;
+            switch (getContenido())
+            {
+                case "int":
+                    tipoDato = Variable.TipoDato.Int;
+                    break;
+                case "float":
+                    tipoDato = Variable.TipoDato.Float;
+                    break;
+                default:
+                    tipoDato = Variable.TipoDato.Char;
+                    break;
+            }
             match(Tipos.tipoDatos);
-            listaIdentificadores();
+            listaIdentificadores(tipoDato);
             match(";");
             if (getClasificacion() == Tipos.tipoDatos)
             {
@@ -67,19 +149,32 @@ namespace LYA1_Sintaxis1
             }
         }
         //listaIdentificadores -> Identificador (,listaIdentificadores)?
-        private void listaIdentificadores()
+        private void listaIdentificadores(Variable.TipoDato tipo)
         {
+
+            string nombre = getContenido();
             match(Tipos.Identificador);
+            if (!existeVariable(nombre))
+            {
+                variables.Add(new Variable(nombre, tipo));
+            }
+            else
+            {
+                throw new Error("de Sintaxis : la variable " + nombre + " ya existe ", log);
+
+            }
             if (getContenido() == ",")
             {
                 match(",");
-                listaIdentificadores();
+                listaIdentificadores(tipo);
             }
         }
+
         //bloqueInstrucciones -> { listaIntrucciones? }
         private void bloqueInstrucciones()
         {
             match("{");
+            Variables();
             if (getContenido() != "}")
             {
                 ListaInstrucciones();
@@ -132,12 +227,26 @@ namespace LYA1_Sintaxis1
         {
             match("printf");
             match("(");
+
+            string str = getContenido();
+
+            str = str.Replace("\"", "");
+
+            if (str.Contains("\\n"))
+            {
+                str = str.Replace("\\n", "\n");
+            }
+            else if (str.Contains("\\t")) str = str.Replace("\\t", "\t");
+
             match(Tipos.Cadena);
-            while (getContenido() == ",")
+            if (getContenido() == ",")
             {
                 match(",");
+                str = str.Replace("%f", valorVariable(getContenido()).ToString());
+
                 match(Tipos.Identificador);
             }
+            Console.Write(str);
             match(")");
             match(";");
 
@@ -145,14 +254,6 @@ namespace LYA1_Sintaxis1
         //    Requerimiento 2: Scanf -> scanf(cadena,&Identificador);
         private void Scanf()
         {
-            match("scanf");
-            match("(");
-            match(Tipos.Cadena);
-            match(",");
-            match("&");
-            match(Tipos.Identificador);
-            match(")");
-            match(";");
         }
 
         //Asignacion -> Identificador (++ | --) | (= Expresion);
@@ -167,7 +268,8 @@ namespace LYA1_Sintaxis1
             {
                 match(Tipos.OperadorFactor);
             }
-            else if (getClasificacion() == Tipos.Incremento){
+            else if (getClasificacion() == Tipos.Incremento)
+            {
                 match(Tipos.Incremento);
             }
             else if (getClasificacion() == Tipos.Decremento)
@@ -209,7 +311,7 @@ namespace LYA1_Sintaxis1
             {
                 Instruccion();
             }
-            if(getContenido() == "else")
+            if (getContenido() == "else")
             {
                 match("else");
                 if (getContenido() == "{")
@@ -262,7 +364,7 @@ namespace LYA1_Sintaxis1
             Condicion();
             match(")");
             match(";");
-            
+
         }
         //For -> for(Asignacion Condicion; Incremento) BloqueInstruccones | Instruccion 
         private void For()
@@ -308,7 +410,7 @@ namespace LYA1_Sintaxis1
         }
         //Expresion -> Termino MasTermino
         private void Expresion()
-        {   
+        {
             Termino();
             MasTermino();
         }
@@ -317,8 +419,18 @@ namespace LYA1_Sintaxis1
         {
             if (getClasificacion() == Tipos.OperadorTermino)
             {
+                string op = getContenido();
                 match(Tipos.OperadorTermino);
                 Termino();
+                float N1 = s.Pop();
+                float N2 = s.Pop();
+                switch (op)
+                {
+                    case "+": s.Push(N2 + N1); break;
+                    case "-": s.Push(N2 - N1); break;
+                }
+
+                // Console.Write(" " + op);
             }
         }
         //Termino -> Factor PorFactor
@@ -333,8 +445,19 @@ namespace LYA1_Sintaxis1
         {
             if (getClasificacion() == Tipos.OperadorFactor)
             {
+                string op = getContenido();
                 match(Tipos.OperadorFactor);
                 Factor();
+
+                float N1 = s.Pop();
+                float N2 = s.Pop();
+
+                switch (op)
+                {
+                    case "*": s.Push(N1 * N2); break;
+                    case "/": s.Push(N1 / N2); break;
+                    case "%": s.Push(N1 % N2); break;
+                }
             }
         }
         //Factor -> numero | identificador | (Expresion)
@@ -342,17 +465,45 @@ namespace LYA1_Sintaxis1
         {
             if (getClasificacion() == Tipos.Numero)
             {
+                s.Push(float.Parse(getContenido()));
                 match(Tipos.Numero);
             }
             else if (getClasificacion() == Tipos.Identificador)
             {
+                s.Push(valorVariable(getContenido()));
                 match(Tipos.Identificador);
             }
             else
             {
                 match("(");
-                Expresion();
-                match(")");
+                if (getClasificacion() == Tipos.tipoDatos)
+                {
+                    float val = 0;
+                    string tipo = getContenido();
+                    match(Tipos.tipoDatos);
+                    match(")");
+                    Expresion();
+                    // POP 
+                    // %255 O %65536
+                    // PUSH
+                    switch (tipo)
+                    {
+                        case "char":
+                            Console.WriteLine(val % 256);
+                            s.Push(val % 256);
+                            Console.WriteLine(val % 256);
+                            break;
+                        case "int":
+                            Console.WriteLine(val % 65536);
+                            s.Push(val % 65536);
+                            break;
+                    }
+                }
+                else
+                {
+                    Expresion();
+                    match(")");
+                }
             }
         }
     }
