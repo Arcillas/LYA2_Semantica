@@ -254,6 +254,21 @@ namespace LYA2_Semantica
         //    Requerimiento 2: Scanf -> scanf(cadena,&Identificador);
         private void Scanf()
         {
+            string name = "";
+            string? var = "deja de decir que es no nullable la concha de tu madre"; // equisde, con el ? se convierte en nullable y así no se queja el compilador 
+            match("scanf");
+            match("(");
+            match(Tipos.Cadena);
+            match(",");
+            match("&");
+            name = getContenido();
+            match(Tipos.Identificador);
+            var = Console.ReadLine();
+
+            if (var != null) modificarValor(name, float.Parse(var));
+
+            match(")");
+            match(";");
         }
 
         //Asignacion -> Identificador (++ | --) | (= Expresion);
