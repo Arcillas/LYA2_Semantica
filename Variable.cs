@@ -14,22 +14,16 @@ namespace LYA2_Semantica
         private string nombre;
         private TipoDato  tipo;
         private float valor;
-		private string String;
         public Variable(string nombre,TipoDato tipo)
         {
             this.nombre = nombre;
             this.tipo = tipo;
             this.valor = 0;
-			this.String = "";
         }
         public void setValor(float valor)
         {
             this.valor = valor;
         }
-        public void setString(string String)
-		{
-			this.String = String;
-		}
         public string getNombre()
         {
             return this.nombre;
@@ -42,9 +36,5 @@ namespace LYA2_Semantica
         {
             return this.valor;
         }
-        public string getString()
-		{
-			return this.String;
-		}
 	}
 }
