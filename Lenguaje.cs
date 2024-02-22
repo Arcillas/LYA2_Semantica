@@ -44,7 +44,7 @@ namespace LYA2_Semantica
             }
             Main();
             imprimirVariables();
-            imprimeStack();
+            // imprimeStack();
         }
         //Librerias -> #include<identificador(.h)?> Librerias?
         private void Librerias()
@@ -102,7 +102,7 @@ namespace LYA2_Semantica
             }
             return 0;
         }
-        private float modificarValor(String nombre, float NewValor)
+        private void modificarValor(String nombre, float NewValor)
         {
             foreach (Variable v in variables)
             {
@@ -113,31 +113,31 @@ namespace LYA2_Semantica
                         if (NewValor >= 0 && NewValor <= 255)
                         {
                             v.setValor(NewValor);
-                            return NewValor;
                         }
                         else
                         {
-                            throw new Error("de Sintaxis: el valor de la variable " + nombre + " no es un char ", log);
+                            throw new Error("de Sintaxis: el valor de la variable [" + nombre + "] no es un char ", log);
                         }
                     }
-                    if (v.getTipo() == Variable.TipoDato.Int)
+                    else if (v.getTipo() == Variable.TipoDato.Int)
                     {
                         if (NewValor <= 65535)
                         {
                             v.setValor(NewValor);
-                            return NewValor;
                         }
                         else
                         {
-                            throw new Error("de Sintaxis: el valor de la variable " + nombre + " no es un int ", log);
+                            throw new Error("de Sintaxis: el valor de la variable [" + nombre + "] no es un int ", log);
                         }
                     }
+                    else
+                    {
 
-                    v.setValor(NewValor);
-                    return NewValor;
+                        v.setValor(NewValor);
+                    }
+
                 }
             }
-            return 0;
         }
 
         private bool existeVariable(string nombre)
@@ -313,7 +313,7 @@ namespace LYA2_Semantica
             float var1_value = 0;
             float var2_value = 0;
             string var_2;
-            float new_val;
+            float new_val = 0;
 
             var_1 = getContenido();
 
@@ -329,7 +329,6 @@ namespace LYA2_Semantica
                 {
                     match(Tipos.Incremento);
                     new_val = var1_value + 1;
-                    s.Push(modificarValor(var_1, new_val));
                     // modificarValor(var_1, new_val);
                 }
                 else if (getClasificacion() == Tipos.Decremento)
@@ -337,7 +336,6 @@ namespace LYA2_Semantica
                     match(Tipos.Decremento);
                     new_val = var1_value - 1;
                     // modificarValor(var_1, new_val);
-                    s.Push(modificarValor(var_1, new_val));
                 }
 
                 else if (getClasificacion() == Tipos.IncrementoTermino)
@@ -364,7 +362,6 @@ namespace LYA2_Semantica
                             Expresion();
                             new_val = s.Pop();
                         }
-                        s.Push(modificarValor(var_1, new_val));
                         // modificarValor(var_1, new_val);
                     }
 
@@ -390,8 +387,8 @@ namespace LYA2_Semantica
                             new_val = s.Pop();
                         }
                         // modificarValor(var_1, new_val);
-                        s.Push(modificarValor(var_1, new_val));
                     }
+                    // modificarValor(var_1, new_val);
 
                 }
                 else if (getClasificacion() == Tipos.IncrementoFactor)
@@ -419,7 +416,6 @@ namespace LYA2_Semantica
                             new_val = s.Pop();
                         }
                         // modificarValor(var_1, new_val);
-                        s.Push(modificarValor(var_1, new_val));
                     }
 
                     else if (getContenido().Equals("/="))
@@ -444,7 +440,7 @@ namespace LYA2_Semantica
                             new_val = s.Pop();
                         }
                     }
-
+                    // modificarValor(var_1, new_val);
                 }
 
                 else
@@ -453,8 +449,10 @@ namespace LYA2_Semantica
                     match("=");
                     Expresion();
                     new_val = s.Pop();
-                    s.Push(modificarValor(var_1, new_val));
                 }
+				// Console.WriteLine("New val: "+ new_val);
+                modificarValor(var_1, new_val);
+
             }
             else
             {
@@ -650,11 +648,12 @@ namespace LYA2_Semantica
                 match("(");
                 if (getClasificacion() == Tipos.tipoDatos)
                 {
-                    float val = s.Pop();
+                    float val = 0;
                     string tipo = getContenido();
                     match(Tipos.tipoDatos);
                     match(")");
                     Expresion();
+                    val = s.Pop();
                     // POP 
                     // %255 O %65536
                     // PUSH
@@ -668,6 +667,9 @@ namespace LYA2_Semantica
                         case "int":
                             // Console.WriteLine(val % 65536);
                             s.Push(val % 65536);
+                            break;
+                        case "float":
+                            s.Push(val);
                             break;
                     }
                 }
