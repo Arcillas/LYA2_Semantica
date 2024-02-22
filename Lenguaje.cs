@@ -13,6 +13,14 @@ using System.Threading.Tasks;
 
 	Tipo: usando un replace de '\n' a un '\\n'
 
+
+	Requerimiento 1: Marcar errores sintacticos para variables no declaradas
+    Requerimiento 2: Asignacion, modificar el valor de la variable, no pasar por alto el ++ y el --
+    Requerimiento 3: Printf, Quitar las comillas, implementar secuencas de escape
+    Requerimiento 4: Modificar el valor de la variable en el Scanf y levantar una excepcion
+                     si lo capturado no es un número
+    Requerimiento 5: Implementar el casteo
+
 */
 
 namespace LYA2_Semantica
@@ -262,14 +270,10 @@ namespace LYA2_Semantica
             string str = getContenido();
 
             str = str.Replace("\"", "");
+            str = str.Replace("\\n", "\n");
+            str = str.Replace("\\t", "\t");
 
-            if (str.Contains("\\n"))
-            {
-                str = str.Replace("\\n", "\n");
-            }
-            else if (str.Contains("\\t")) str = str.Replace("\\t", "\t");
-
-            match(Tipos.Cadena);
+                match(Tipos.Cadena);
             if (getContenido() == ",")
             {
                 match(",");
@@ -279,7 +283,11 @@ namespace LYA2_Semantica
                     str = str.Replace("%f", valorVariable(getContenido()).ToString());
                 }
 
-                match(Tipos.Identificador);
+				string var = getContenido();
+
+                if (!existeVariable(var))
+                	throw new Error("de Sintaxis: No existe la variable "+ var, log);
+				match(Tipos.Identificador);
             }
             Console.Write(str);
             match(")");
@@ -300,7 +308,12 @@ namespace LYA2_Semantica
             match(Tipos.Identificador);
             var = Console.ReadLine();
 
-            if (var != null) modificarValor(name, float.Parse(var));
+            if (!existeVariable(name))
+				throw new Error("de Sintaxis: No existe la variable " + name, log);
+			if (var != null)
+				modificarValor(name, float.Parse(var));
+			else 
+				throw new Error("de Entrada: No se capturó un numero o es \"null\"", log);
 
             match(")");
             match(";");
@@ -317,12 +330,11 @@ namespace LYA2_Semantica
 
             var_1 = getContenido();
 
-            // Console.WriteLine(getContenido());
-
-            match(Tipos.Identificador);
+            // Console.WriteLine(getContenido()); 
 
             if (existeVariable(var_1))
             {
+				match(Tipos.Identificador);
                 var1_value = valorVariable(var_1);
 
                 if (getClasificacion() == Tipos.Incremento)
@@ -450,7 +462,7 @@ namespace LYA2_Semantica
                     Expresion();
                     new_val = s.Pop();
                 }
-				// Console.WriteLine("New val: "+ new_val);
+                // Console.WriteLine("New val: "+ new_val);
                 modificarValor(var_1, new_val);
 
             }
@@ -555,6 +567,10 @@ namespace LYA2_Semantica
         //Incremento -> Identificador ++ | --
         private void Incremento()
         {
+			string var_name = getContenido();	
+			if (!existeVariable(var_name))
+				throw new Error("de Sintaxis: la variable " + var_name + " no existe ", log);
+			
             match(Tipos.Identificador);
             if (getClasificacion() == Tipos.Incremento)
             {
@@ -638,9 +654,10 @@ namespace LYA2_Semantica
             }
             else if (getClasificacion() == Tipos.Identificador)
             {
-                // Valor de la variable s.Push(); // 
+				string var_name = getContenido();
+				if (!existeVariable(var_name))
+					throw new Error("de Sintaxis: la variable " + var_name + " no existe ", log);
                 s.Push(valorVariable(getContenido()));
-                // Console.Write(" " + getContenido());
                 match(Tipos.Identificador);
             }
             else
